@@ -1,37 +1,38 @@
-# >x=ú Bloodhound Nmap Scanner
+# Bloodhound Nmap Scanner
 
-> **Transform your network reconnaissance into beautiful BloodHound graphs! <¯**
+> **Transform your network reconnaissance into beautiful BloodHound graphs!**
 
 A powerful Python tool that combines the network discovery capabilities of **Nmap** with the graph visualization power of **BloodHound's OpenGraph format**. Turn your port scans into actionable intelligence! 
 
-## ( Features
+## Features
 
-- = **Smart Network Scanning**: Leverage Nmap's powerful scanning engine
-- < **Subnet Expansion**: Automatically expand CIDR notation (`192.168.1.0/24`) into individual hosts
-- =Ê **BloodHound Integration**: Export results directly to OpenGraph JSON format
-- ™ **Flexible Configuration**: JSON-based configuration for easy customization
-- =á **Security Focused**: Built for defensive security and network analysis
-- =€ **Easy to Use**: Simple command-line interface
+- **Smart Network Scanning**: Leverage Nmap's powerful scanning engine
+- **Subnet Expansion**: Automatically expand CIDR notation (`192.168.1.0/24`) into individual hosts
+- **BloodHound Integration**: Export results directly to OpenGraph JSON format
+- **Flexible Configuration**: JSON-based configuration for easy customization
+- **Security Focused**: Built for defensive security and network analysis
+- **Easy to Use**: Simple command-line interface
 
-## =€ Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Python 3.13+
+- Python 3.9+
 - Nmap installed on your system
 - Root/Administrator privileges (for some scan types)
 
 ### Installation
 
-1. **Clone the repository:**
+1. **Install from PyPI:**
    ```bash
-   git clone <your-repo-url>
-   cd bloodhound-nmap
+   pip install bloodhound-nmap
    ```
 
-2. **Install dependencies:**
+2. **Or clone the repository:**
    ```bash
-   pip install -r requirements.txt
+   git clone https://github.com/rreichel3/bloodhound-nmap.git
+   cd bloodhound-nmap
+   pip install -e .
    ```
 
 ### Usage
@@ -47,9 +48,9 @@ A powerful Python tool that combines the network discovery capabilities of **Nma
    python main.py my_scan.json
    ```
 
-3. **Import results into BloodHound! =È**
+3. **Import results into BloodHound!**
 
-## =Ý Configuration Format
+## Configuration Format
 
 Create a JSON configuration file with your scan parameters:
 
@@ -73,17 +74,17 @@ Create a JSON configuration file with your scan parameters:
 | `ports` | Array/String | Ports to scan | `[80, 443]` or `"1-1000"` |
 | `output_file` | String | Output filename (optional) | `"results.json"` |
 
-## <¯ What Gets Scanned?
+## What Gets Scanned?
 
 For each discovered host, the tool captures:
 
-- <à **Host Information**: IP address, hostname, state
-- =¥ **Operating System**: Detected OS and accuracy
-- =ª **Open Ports**: All discovered open ports
-- =' **Services**: Service names, products, versions
-- =Ê **BloodHound Properties**: Everything formatted for graph analysis
+- **Host Information**: IP address, hostname, state
+- **Operating System**: Detected OS and accuracy
+- **Open Ports**: All discovered open ports
+- **Services**: Service names, products, versions
+- **BloodHound Properties**: Everything formatted for graph analysis
 
-## < Example Output
+## Example Output
 
 ```json
 {
@@ -106,7 +107,7 @@ For each discovered host, the tool captures:
 }
 ```
 
-## =' Advanced Usage
+## Advanced Usage
 
 ### Large Network Scanning
 ```json
@@ -126,21 +127,21 @@ For each discovered host, the tool captures:
 }
 ```
 
-##   Safety Features
+## Safety Features
 
-- =á **Subnet Limits**: Automatically limits subnet expansion to 1024 hosts
-- = **Defensive Only**: Built for security analysis and network documentation
-- =Ë **Error Handling**: Graceful handling of network issues and invalid targets
+- **Subnet Limits**: Automatically limits subnet expansion to 1024 hosts
+- **Defensive Only**: Built for security analysis and network documentation
+- **Error Handling**: Graceful handling of network issues and invalid targets
 
-## > Contributing
+## Contributing
 
 Contributions welcome! This tool is designed for **defensive security purposes only**. Please ensure all contributions align with this mission.
 
-## =Ü License
+## License
 
-[Add your license here]
+MIT License
 
-## =O Acknowledgments
+## Acknowledgments
 
 - **Nmap Team**: For the incredible network scanning capabilities
 - **BloodHound Team**: For revolutionizing attack path analysis
@@ -148,4 +149,4 @@ Contributions welcome! This tool is designed for **defensive security purposes o
 
 ---
 
-**Happy Scanning! <‰** Remember to always scan responsibly and only on networks you own or have explicit permission to test! =á
+**Happy Scanning!** Remember to always scan responsibly and only on networks you own or have explicit permission to test!
