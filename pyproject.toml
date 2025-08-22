@@ -1,6 +1,6 @@
 [project]
 name = "bloodhound-nmap"
-version = "0.1.0"
+version = "0.1.1"
 description = "Transform Nmap scan results into BloodHound-compatible OpenGraph format for network analysis"
 readme = "README.md"
 requires-python = ">=3.9"
