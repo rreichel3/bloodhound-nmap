@@ -1,0 +1,44 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "localhost",
+        "kinds": [
+          "Computer",
+          "Server"
+        ],
+        "properties": {
+          "ip_address": "127.0.0.1",
+          "state": "up",
+          "hostname": "localhost",
+          "open_ports": [],
+          "port_count": 0
+        }
+      },
+      {
+        "id": "dns.google",
+        "kinds": [
+          "Computer",
+          "Server"
+        ],
+        "properties": {
+          "ip_address": "8.8.8.8",
+          "state": "up",
+          "hostname": "dns.google",
+          "os_name": "Apple macOS 11 (Big Sur) (Darwin 20.6.0)",
+          "os_accuracy": "85",
+          "open_ports": [
+            "443/tcp"
+          ],
+          "port_count": 1,
+          "service_443_tcp_name": "https",
+          "service_443_tcp_product": "HTTP server (unknown)"
+        }
+      }
+    ],
+    "edges": []
+  },
+  "metadata": {
+    "source_kind": "NmapScanner"
+  }
+}

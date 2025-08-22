@@ -1,0 +1,44 @@
+[project]
+name = "bloodhound-nmap"
+version = "0.1.0"
+description = "Transform Nmap scan results into BloodHound-compatible OpenGraph format for network analysis"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+maintainers = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+keywords = ["nmap", "bloodhound", "security", "network", "scanning", "opengraph"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: System :: Networking :: Monitoring",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "bloodhound-opengraph>=1.0.0",
+    "python-nmap>=0.7.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/bloodhound-nmap"
+Documentation = "https://github.com/yourusername/bloodhound-nmap#readme"
+Repository = "https://github.com/yourusername/bloodhound-nmap.git"
+"Bug Tracker" = "https://github.com/yourusername/bloodhound-nmap/issues"
+
+[project.scripts]
+bloodhound-nmap = "main:main"

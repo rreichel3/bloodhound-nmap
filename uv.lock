@@ -1,0 +1,33 @@
+version = 1
+revision = 1
+requires-python = ">=3.13"
+
+[[package]]
+name = "bloodhound-nmap"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "bloodhound-opengraph" },
+    { name = "python-nmap" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "bloodhound-opengraph", specifier = ">=1.0.0" },
+    { name = "python-nmap", specifier = ">=0.7.1" },
+]
+
+[[package]]
+name = "bloodhound-opengraph"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/30/b7/103a27db603a726d6a2bf8d9670ceaab45f0490d9a4be6258998cd5921d8/bloodhound_opengraph-1.0.0.tar.gz", hash = "sha256:039fa6d71e2e577c06c3cbeb47c8923f709106122aa975169cbbd94feae4a8b8", size = 15838 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/ef/a7f6f3669034611d47e66ec3f3aa0227b5044aa95af8a7f0ac4e316f2277/bloodhound_opengraph-1.0.0-py3-none-any.whl", hash = "sha256:b9f0287e4aece58099fe0a79995699831e1f8024cbb1b0bcbb37f094949ed2bc", size = 16908 },
+]
+
+[[package]]
+name = "python-nmap"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/1b/8e6b3d1461331e4e8600faf099e7c62ba3c1603987dafdd558681fb8ba37/python-nmap-0.7.1.tar.gz", hash = "sha256:f75af6b91dd8e3b0c31f869db32163f62ada686945e5b7c25f84bc0f7fad3b64", size = 44366 }
