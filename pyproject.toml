@@ -1,6 +1,6 @@
 [project]
 name = "bloodhound-nmap"
-version = "0.1.1"
+version = "0.1.2"
 description = "Transform Nmap scan results into BloodHound-compatible OpenGraph format for network analysis"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -41,7 +41,7 @@ Repository = "https://github.com/rreichel3/bloodhound-nmap.git"
 "Bug Tracker" = "https://github.com/rreichel3/bloodhound-nmap/issues"
 
 [project.scripts]
-bloodhound-nmap = "main:main"
+bloodhound-nmap = "bloodhound_nmap.main:main"
 
 [build-system]
 requires = ["hatchling"]
