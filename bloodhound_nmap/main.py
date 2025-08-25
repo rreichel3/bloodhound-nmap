@@ -3,6 +3,9 @@ import nmap
 import json
 import sys
 import ipaddress
+import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 from opengraph import OpenGraphBuilder
 
 
@@ -44,13 +47,11 @@ def expand_subnets(hosts):
             # Check if it's a subnet (contains '/')
             if '/' in host:
                 network = ipaddress.ip_network(host, strict=False)
-                # Limit subnet expansion to avoid scanning too many hosts
-                if network.num_addresses > 1024:
-                    print(f"Warning: Subnet {host} has {network.num_addresses} addresses. Limiting to first 1024.")
-                    hosts_to_add = list(network.hosts())[:1024]
-                else:
-                    hosts_to_add = list(network.hosts())
+                # Warn about large subnets but don't limit
+                if network.num_addresses > 10000:
+                    print(f"Warning: Subnet {host} has {network.num_addresses} addresses. This may take a very long time to scan.")
                 
+                hosts_to_add = list(network.hosts())
                 expanded_hosts.extend([str(ip) for ip in hosts_to_add])
             else:
                 # Regular hostname or IP
@@ -62,18 +63,18 @@ def expand_subnets(hosts):
     return expanded_hosts
 
 
-def scan_hosts(hosts, ports="1-1000"):
+def ping_sweep(hosts):
     """
-    Perform nmap scan on specified hosts and ports
+    Perform ping sweep to identify live hosts
     
     Args:
-        hosts: List of IP addresses or hostnames to scan
-        ports: Port range to scan (default: 1-1000)
+        hosts: List of IP addresses or hostnames to check
     
     Returns:
-        nmap.PortScanner results
+        list: List of live hosts
     """
     nm = nmap.PortScanner()
+    live_hosts = []
     
     # Convert list to space-separated string if needed
     if isinstance(hosts, list):
@@ -81,10 +82,114 @@ def scan_hosts(hosts, ports="1-1000"):
     else:
         hosts_str = hosts
     
-    print(f"Scanning hosts: {hosts_str} on ports {ports}")
-    nm.scan(hosts=hosts_str, ports=ports, arguments='-sS -O -A')
+    print(f"Performing ping sweep on {len(hosts) if isinstance(hosts, list) else 1} hosts...")
     
-    return nm
+    try:
+        # Fast ping scan with aggressive timing
+        nm.scan(hosts=hosts_str, arguments='-sn -T4 --min-rate=5000')
+        
+        for host in nm.all_hosts():
+            if nm[host].state() == 'up':
+                live_hosts.append(host)
+        
+        print(f"Found {len(live_hosts)} live hosts out of {len(hosts) if isinstance(hosts, list) else 1}")
+        
+    except Exception as e:
+        print(f"Ping sweep failed: {e}")
+        # Fall back to original host list
+        return hosts if isinstance(hosts, list) else [hosts]
+    
+    return live_hosts
+
+
+def scan_single_host(host, ports, scan_options):
+    """
+    Scan a single host
+    
+    Args:
+        host: Single IP address or hostname
+        ports: Port range to scan
+        scan_options: Nmap scan arguments
+    
+    Returns:
+        tuple: (host, nmap.PortScanner results or None)
+    """
+    try:
+        nm = nmap.PortScanner()
+        nm.scan(hosts=host, ports=ports, arguments=scan_options)
+        return (host, nm)
+    except Exception as e:
+        print(f"Error scanning {host}: {e}")
+        return (host, None)
+
+
+def scan_hosts_parallel(hosts, ports="1-1000", threads=10, fast_mode=False, ping_first=True):
+    """
+    Perform parallel nmap scan on specified hosts and ports
+    
+    Args:
+        hosts: List of IP addresses or hostnames to scan
+        ports: Port range to scan (default: 1-1000)
+        threads: Number of parallel threads (default: 10)
+        fast_mode: Use faster scan options (default: False)
+        ping_first: Perform ping sweep first (default: True)
+    
+    Returns:
+        nmap.PortScanner with combined results
+    """
+    # Ensure hosts is a list
+    if not isinstance(hosts, list):
+        hosts = [hosts]
+    
+    # Optional ping sweep to filter live hosts
+    if ping_first and len(hosts) > 1:
+        hosts = ping_sweep(hosts)
+        if not hosts:
+            print("No live hosts found during ping sweep")
+            return nmap.PortScanner()
+    
+    # Choose scan arguments based on mode
+    if fast_mode:
+        scan_args = '-sS -T4 --min-rate=1000'
+    else:
+        scan_args = '-sS -sV -T3'
+    
+    print(f"Scanning {len(hosts)} hosts on ports {ports} using {threads} threads ({'fast mode' if fast_mode else 'standard scan'})")
+    
+    # Combine all results into a single PortScanner object
+    combined_nm = nmap.PortScanner()
+    results_lock = Lock()
+    
+    def process_result(future):
+        host, nm_result = future.result()
+        if nm_result is not None:
+            with results_lock:
+                # Merge results
+                for scanned_host in nm_result.all_hosts():
+                    combined_nm._scan_result['scan'][scanned_host] = nm_result._scan_result['scan'][scanned_host]
+    
+    # Scan hosts in parallel
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        # Submit all scan jobs
+        futures = [executor.submit(scan_single_host, host, ports, scan_args) for host in hosts]
+        
+        # Process completed scans
+        completed = 0
+        for future in as_completed(futures):
+            process_result(future)
+            completed += 1
+            if completed % max(1, len(hosts) // 10) == 0:  # Progress updates
+                print(f"Completed {completed}/{len(hosts)} scans...")
+    
+    return combined_nm
+
+
+# Backward compatibility wrapper
+def scan_hosts(hosts, ports="1-1000"):
+    """
+    Backward compatibility wrapper for scan_hosts
+    """
+    return scan_hosts_parallel(hosts, ports, threads=1, fast_mode=False, ping_first=False)
 
 
 def convert_nmap_to_servers(nm_results):
@@ -160,13 +265,52 @@ def convert_nmap_to_servers(nm_results):
 
 
 def main():
-    # Check for configuration file argument
-    if len(sys.argv) < 2:
-        print("Usage: python main.py <config_file.json>")
-        print("Example: python main.py scan_config.json")
-        sys.exit(1)
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="Transform Nmap scan results into BloodHound-compatible OpenGraph format",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Example usage:
+  bloodhound-nmap scan_config.json
+  bloodhound-nmap --fast --threads 20 my_targets.json
+  bloodhound-nmap --no-ping --threads 5 scan_config.json
+        
+The configuration file should be a JSON file with the following format:
+{
+  "hosts": ["127.0.0.1", "192.168.1.0/24", "scanme.nmap.org"],
+  "ports": [22, 80, 443, 3389, 8080],
+  "output_file": "results.json"
+}
+        """
+    )
+    parser.add_argument(
+        "config_file", 
+        help="JSON configuration file specifying hosts and ports to scan"
+    )
+    parser.add_argument(
+        "--threads", "-t",
+        type=int,
+        default=10,
+        help="Number of parallel scanning threads (default: 10)"
+    )
+    parser.add_argument(
+        "--fast", "-f",
+        action="store_true",
+        help="Use fast scan mode (less accurate but much faster)"
+    )
+    parser.add_argument(
+        "--no-ping",
+        action="store_true",
+        help="Skip ping sweep (scan all hosts directly)"
+    )
+    parser.add_argument(
+        "--version", 
+        action="version", 
+        version="%(prog)s 0.2.0"
+    )
     
-    config_file = sys.argv[1]
+    args = parser.parse_args()
+    config_file = args.config_file
     
     # Load configuration
     config = load_config(config_file)
@@ -192,8 +336,14 @@ def main():
     output_file = config.get("output_file", "nmap_scan_results.json")
     
     try:
-        # Perform nmap scan
-        scan_results = scan_hosts(hosts_to_scan, ports_to_scan)
+        # Perform nmap scan using parallel scanning
+        scan_results = scan_hosts_parallel(
+            hosts_to_scan, 
+            ports_to_scan,
+            threads=args.threads,
+            fast_mode=args.fast,
+            ping_first=not args.no_ping
+        )
         
         # Convert to OpenGraph server objects
         builder = convert_nmap_to_servers(scan_results)
